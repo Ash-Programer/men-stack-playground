@@ -8,6 +8,10 @@ const userSchema = mongoose.Schema(
         name:String,
         email:String,
         password:String,
+        profilepic:{
+            type:String,
+            default:'default.webp'
+        },
         age:Number,
         posts:[
             {

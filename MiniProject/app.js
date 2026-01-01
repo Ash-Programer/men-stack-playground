@@ -2,13 +2,17 @@ const cookieParser = require('cookie-parser');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const app = express();
 const userModel = require('./models/user');
 const postModel = require('./models/post');
+const upload = require('./config/multerconfig')
+// const multerconfig = require('./config/multerconfig');
 app.set('view engine','ejs');
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname,'public')));
 
 const isLoggedIn = (req, res, next)=>{
     if(req.cookies.token === "") res.redirect('/login');
@@ -24,6 +28,10 @@ app.get('/',(req,res)=>{
 
 app.get('/login',(req,res)=>{
     res.render('login');
+})
+
+app.get('/profileupload',(req,res)=>{
+    res.render('profileUpload');
 })
 
 app.post('/register', async (req,res)=>{
@@ -114,6 +122,15 @@ app.get('/edit/:id', async (req,res)=>{
 app.post('/update/:id', async (req,res)=>{
     const post = await postModel.findOneAndUpdate({_id:req.params.id},{content:req.body.content});
     res.redirect('/profile')
+})
+
+app.post('/upload', isLoggedIn,upload.single("image"),async (req, res)=>{
+    // console.log(req.file);
+    //  lets first find the user 
+    const user = await userModel.findOne({email:req.user.email}); 
+    user.profilepic = req.file.filename;
+    await user.save();
+    res.redirect("/profile");
 })
 
 app.listen(4000,()=>{
